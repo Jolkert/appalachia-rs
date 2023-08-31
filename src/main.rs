@@ -3,6 +3,7 @@ use std::fs;
 use serenity::async_trait;
 use serenity::prelude::*;
 use serenity::model::channel::Message;
+use serenity::model::gateway::Ready;
 use serenity::framework::standard::macros::{command, group};
 use serenity::framework::standard::{StandardFramework, CommandResult};
 
@@ -12,10 +13,30 @@ struct General;
 
 struct Handler;
 #[async_trait]
-impl EventHandler for Handler {}
+impl EventHandler for Handler
+{
+    async fn ready(&self, context: Context, ready: Ready)
+    {// this is here for testing and probaby doesnt need to be in final build - morg 2023-08-30
+        println!("{} online!", ready.user.name);
+
+        if let Ok(guilds) = ready.user.guilds(context.http).await
+        {
+            println!("Active in {} guilds", guilds.len());
+
+            for guild in guilds {
+                println!("{}", guild.name);
+            }
+        }
+        else
+        {
+            println!("Could not retrieve guilds!");
+        }
+    }
+}
 
 #[tokio::main]
-async fn main() {
+async fn main()
+{
     let framework = StandardFramework::new()
         .configure(|c| c.prefix("~"))
         .group(&GENERAL_GROUP);
@@ -36,7 +57,8 @@ async fn main() {
 }
 
 #[command]
-async fn ping(context: &Context, message: &Message) -> CommandResult {
+async fn ping(context: &Context, message: &Message) -> CommandResult
+{
     message.reply(context, "Pong!").await?;
     Ok(())
 }
